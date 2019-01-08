@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"path"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -20,7 +19,7 @@ func newHTTPRequest(ctx context.Context, event events.APIGatewayProxyRequest) (*
 	}
 	u := url.URL{
 		Host:     event.Headers["Host"],
-		Path:     path.Join("/", event.PathParameters["proxy"]),
+		Path:     path.Join("/", event.PathParameters["proxy"]),,
 		RawQuery: params.Encode(),
 	}
 	// Handle base64 encoded body.
