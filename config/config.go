@@ -12,16 +12,17 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-
 	"github.com/go-spatial/tegola"
 	"github.com/go-spatial/tegola/internal/env"
 	"github.com/go-spatial/tegola/internal/log"
 )
 
+var blacklistHeaders = []string{"content-encoding", "content-length", "content-type"}
+
 // Config represents a tegola config file.
 type Config struct {
 	// the tile buffer to use
-	TileBuffer int64 `toml:"tile_buffer"`
+	TileBuffer *env.Int `toml:"tile_buffer"`
 	// LocationName is the file name or http server that the config was read from.
 	// If this is an empty string, it means that the location was unknown. This is the case if
 	// the Parse() function is used directly.
@@ -34,9 +35,9 @@ type Config struct {
 }
 
 type Webserver struct {
-	HostName          env.String `toml:"hostname"`
-	Port              env.String `toml:"port"`
-	CORSAllowedOrigin env.String `toml:"cors_allowed_origin"`
+	HostName env.String `toml:"hostname"`
+	Port     env.String `toml:"port"`
+	Headers  env.Dict   `toml:"headers"`
 }
 
 // A Map represents a map in the Tegola Config file.
@@ -123,6 +124,15 @@ func (c *Config) Validate() error {
 
 			// add the MapLayer to our map
 			mapLayers[string(m.Name)][name] = l
+		}
+	}
+
+	// check for blacklisted headers
+	for k := range c.Webserver.Headers {
+		for _, v := range blacklistHeaders {
+			if v == strings.ToLower(k) {
+				return ErrInvalidHeader{Header: k}
+			}
 		}
 	}
 

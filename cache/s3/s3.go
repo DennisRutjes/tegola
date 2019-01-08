@@ -2,6 +2,7 @@ package s3
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"io"
 	"os"
@@ -10,12 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 
 	"github.com/go-spatial/tegola"
 	"github.com/go-spatial/tegola/cache"
 	"github.com/go-spatial/tegola/dict"
+	"github.com/go-spatial/tegola/mvt"
 )
 
 var (
@@ -35,15 +38,21 @@ const (
 	ConfigKeyAWSAccessKeyID = "aws_access_key_id"
 	ConfigKeyAWSSecretKey   = "aws_secret_access_key"
 	ConfigKeyACL            = "access_control_list" //	defaults to ""
+	ConfigKeyCacheControl   = "cache_control"       //	defaults to ""
+	ConfigKeyContentType    = "content_type"        //	defaults to "application/vnd.mapbox-vector-tile"
 )
 
 const (
-	DefaultRegion = "us-east-1"
+	DefaultBasepath    = ""
+	DefaultRegion      = "us-east-1"
+	DefaultAccessKey   = ""
+	DefaultSecretKey   = ""
+	DefaultContentType = mvt.MimeType
+	DefaultEndpoint    = ""
 )
 
-const (
-	DefaultEndpoint = ""
-)
+// testData is used during New() to confirm the ability to write, read and purge the cache
+var testData = []byte{0x1f, 0x8b, 0x8, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xff, 0x2a, 0xce, 0xcc, 0x49, 0x2c, 0x6, 0x4, 0x0, 0x0, 0xff, 0xff, 0xaf, 0x9d, 0x59, 0xca, 0x5, 0x0, 0x0, 0x0}
 
 func init() {
 	cache.Register(CacheType, New)
@@ -62,6 +71,8 @@ func init() {
 // 		max_zoom (int): max zoom to use the cache. beyond this zoom cache Set() calls will be ignored
 // 		endpoint (string): the endpoint where the S3 compliant backend is located. only necessary for non-AWS deployments. defaults to ''
 //  	access_control_list (string): the S3 access control to set on the file when putting the file. defaults to ''.
+//  	cache_control (string): the http cache-control header to set on the file when putting the file. defaults to ''.
+//  	content_type (string): the http MIME-type set on the file when putting the file. defaults to 'application/vnd.mapbox-vector-tile'.
 
 func New(config dict.Dicter) (cache.Interface, error) {
 	var err error
@@ -86,7 +97,7 @@ func New(config dict.Dicter) (cache.Interface, error) {
 	}
 
 	// basepath
-	basepath := ""
+	basepath := DefaultBasepath
 	s3cache.Basepath, err = config.String(ConfigKeyBasepath, &basepath)
 	if err != nil {
 		return nil, err
@@ -102,12 +113,12 @@ func New(config dict.Dicter) (cache.Interface, error) {
 		return nil, err
 	}
 
-	accessKey := ""
+	accessKey := DefaultAccessKey
 	accessKey, err = config.String(ConfigKeyAWSAccessKeyID, &accessKey)
 	if err != nil {
 		return nil, err
 	}
-	secretKey := ""
+	secretKey := DefaultSecretKey
 	secretKey, err = config.String(ConfigKeyAWSSecretKey, &secretKey)
 	if err != nil {
 		return nil, err
@@ -155,6 +166,21 @@ func New(config dict.Dicter) (cache.Interface, error) {
 	}
 	s3cache.ACL = acl
 
+	// check for cache_control env var
+	cachecontrol := os.Getenv("AWS_CacheControl")
+	cachecontrol, err = config.String(ConfigKeyCacheControl, &cachecontrol)
+	if err != nil {
+		return nil, err
+	}
+	s3cache.CacheControl = cachecontrol
+
+	contenttype := DefaultContentType
+	contenttype, err = config.String(ConfigKeyContentType, &contenttype)
+	if err != nil {
+		return nil, err
+	}
+	s3cache.ContentType = contenttype
+
 	// in order to confirm we have the correct permissions on the bucket create a small file
 	// and test a PUT, GET and DELETE to the bucket
 	key := cache.Key{
@@ -164,8 +190,9 @@ func New(config dict.Dicter) (cache.Interface, error) {
 		X:         0,
 		Y:         0,
 	}
-	// write a test file
-	if err := s3cache.Set(&key, []byte("\x53\x69\x6c\x61\x73")); err != nil {
+
+	// write gzip encoded test file
+	if err := s3cache.Set(&key, testData); err != nil {
 		e := cache.ErrSettingToCache{
 			CacheType: CacheType,
 			Err:       err,
@@ -220,6 +247,12 @@ type Cache struct {
 
 	// ACL is the aws ACL, if the not set it will use the default value for aws.
 	ACL string
+
+	// CacheControl is the http Cache Control header, if the not set it will use the default value for aws.
+	CacheControl string
+
+	// ContentType is MIME content type of the tile. Default is "application/vnd.mapbox-vector-tile"
+	ContentType string
 }
 
 func (s3c *Cache) Set(key *cache.Key, val []byte) error {
@@ -234,12 +267,17 @@ func (s3c *Cache) Set(key *cache.Key, val []byte) error {
 	k := filepath.Join(s3c.Basepath, key.String())
 
 	input := s3.PutObjectInput{
-		Body:   aws.ReadSeekCloser(bytes.NewReader(val)),
-		Bucket: aws.String(s3c.Bucket),
-		Key:    aws.String(k),
+		Body:            aws.ReadSeekCloser(bytes.NewReader(val)),
+		Bucket:          aws.String(s3c.Bucket),
+		Key:             aws.String(k),
+		ContentType:     aws.String(s3c.ContentType),
+		ContentEncoding: aws.String("gzip"),
 	}
 	if s3c.ACL != "" {
 		input.ACL = aws.String(s3c.ACL)
+	}
+	if s3c.CacheControl != "" {
+		input.CacheControl = aws.String(s3c.CacheControl)
 	}
 
 	_, err = s3c.Client.PutObject(&input)
@@ -261,7 +299,11 @@ func (s3c *Cache) Get(key *cache.Key) ([]byte, bool, error) {
 		Key:    aws.String(k),
 	}
 
-	result, err := s3c.Client.GetObject(&input)
+	// GetObjectWithContenxt is used here so the "Accept-Encoding: gzip" header can be added
+	// without this our gzip response will be decompressed by the underlying transport
+	result, err := s3c.Client.GetObjectWithContext(context.Background(), &input, func(r *request.Request) {
+		r.HTTPRequest.Header.Add("Accept-Encoding", "gzip")
+	})
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {

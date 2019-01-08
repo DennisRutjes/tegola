@@ -2,7 +2,10 @@ package postgis
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
@@ -43,6 +46,9 @@ const (
 	DefaultPort    = 5432
 	DefaultSRID    = tegola.WebMercator
 	DefaultMaxConn = 100
+	DefaultSSLMode = "disable"
+	DefaultSSLKey  = ""
+	DefaultSSLCert = ""
 )
 
 const (
@@ -51,6 +57,10 @@ const (
 	ConfigKeyDB          = "database"
 	ConfigKeyUser        = "user"
 	ConfigKeyPassword    = "password"
+	ConfigKeySSLMode     = "ssl_mode"
+	ConfigKeySSLKey      = "ssl_key"
+	ConfigKeySSLCert     = "ssl_cert"
+	ConfigKeySSLRootCert = "ssl_root_cert"
 	ConfigKeyMaxConn     = "max_connections"
 	ConfigKeySRID        = "srid"
 	ConfigKeyLayers      = "layers"
@@ -60,11 +70,16 @@ const (
 	ConfigKeyFields      = "fields"
 	ConfigKeyGeomField   = "geometry_fieldname"
 	ConfigKeyGeomIDField = "id_fieldname"
+	ConfigKeyGeomType    = "geometry_type"
 )
 
 func init() {
-	provider.Register(Name, NewTileProvider, nil)
+	provider.Register(Name, NewTileProvider, Cleanup)
 }
+
+// isSelectQuery is a regexp to check if a query starts with `SELECT`,
+// case-insensitive and ignoring any preceeding whitespace and SQL comments.
+var isSelectQuery = regexp.MustCompile(`(?i)^((\s*)(--.*\n)?)*select`)
 
 // NewTileProvider instantiates and returns a new postgis provider or an error.
 // The function will validate that the config object looks good before
@@ -113,6 +128,27 @@ func NewTileProvider(config dict.Dicter) (provider.Tiler, error) {
 		return nil, err
 	}
 
+	sslmode := DefaultSSLMode
+	sslmode, err = config.String(ConfigKeySSLMode, &sslmode)
+
+	sslkey := DefaultSSLKey
+	sslkey, err = config.String(ConfigKeySSLKey, &sslkey)
+	if err != nil {
+		return nil, err
+	}
+
+	sslcert := DefaultSSLCert
+	sslcert, err = config.String(ConfigKeySSLCert, &sslcert)
+	if err != nil {
+		return nil, err
+	}
+
+	sslrootcert := DefaultSSLCert
+	sslrootcert, err = config.String(ConfigKeySSLRootCert, &sslrootcert)
+	if err != nil {
+		return nil, err
+	}
+
 	port := DefaultPort
 	if port, err = config.Int(ConfigKeyPort, &port); err != nil {
 		return nil, err
@@ -123,21 +159,33 @@ func NewTileProvider(config dict.Dicter) (provider.Tiler, error) {
 		return nil, err
 	}
 
-	var srid = DefaultSRID
+	srid := DefaultSRID
 	if srid, err = config.Int(ConfigKeySRID, &srid); err != nil {
+		return nil, err
+	}
+
+	connConfig := pgx.ConnConfig{
+		Host:     host,
+		Port:     uint16(port),
+		Database: db,
+		User:     user,
+		Password: password,
+		LogLevel: pgx.LogLevelWarn,
+		RuntimeParams: map[string]string{
+			"default_transaction_read_only": "TRUE",
+			"application_name":              "tegola",
+		},
+	}
+
+	err = ConfigTLS(sslmode, sslkey, sslcert, sslrootcert, &connConfig)
+	if err != nil {
 		return nil, err
 	}
 
 	p := Provider{
 		srid: uint64(srid),
 		config: pgx.ConnPoolConfig{
-			ConnConfig: pgx.ConnConfig{
-				Host:     host,
-				Port:     uint16(port),
-				Database: db,
-				User:     user,
-				Password: password,
-			},
+			ConnConfig:     connConfig,
 			MaxConnections: int(maxcon),
 		},
 	}
@@ -160,9 +208,11 @@ func NewTileProvider(config dict.Dicter) (provider.Tiler, error) {
 		if err != nil {
 			return nil, fmt.Errorf("For layer (%v) we got the following error trying to get the layer's name field: %v", i, err)
 		}
+
 		if j, ok := lyrsSeen[lname]; ok {
 			return nil, fmt.Errorf("%v layer name is duplicated in both layer %v and layer %v", lname, i, j)
 		}
+
 		lyrsSeen[lname] = i
 		if i == 0 {
 			p.firstlayer = lname
@@ -170,38 +220,44 @@ func NewTileProvider(config dict.Dicter) (provider.Tiler, error) {
 
 		fields, err := layer.StringSlice(ConfigKeyFields)
 		if err != nil {
-			return nil, fmt.Errorf("For layer (%v) %v %v field had the following error: %v", i, lname, ConfigKeyFields, err)
+			return nil, fmt.Errorf("for layer (%v) %v %v field had the following error: %v", i, lname, ConfigKeyFields, err)
 		}
 
 		geomfld := "geom"
 		geomfld, err = layer.String(ConfigKeyGeomField, &geomfld)
 		if err != nil {
-			return nil, fmt.Errorf("For layer (%v) %v : %v", i, lname, err)
+			return nil, fmt.Errorf("for layer (%v) %v : %v", i, lname, err)
 		}
 
-		idfld := "gid"
+		idfld := ""
 		idfld, err = layer.String(ConfigKeyGeomIDField, &idfld)
 		if err != nil {
-			return nil, fmt.Errorf("For layer (%v) %v : %v", i, lname, err)
+			return nil, fmt.Errorf("for layer (%v) %v : %v", i, lname, err)
 		}
 		if idfld == geomfld {
-			return nil, fmt.Errorf("For layer (%v) %v: %v (%v) and %v field (%v) is the same!", i, lname, ConfigKeyGeomField, geomfld, ConfigKeyGeomIDField, idfld)
+			return nil, fmt.Errorf("for layer (%v) %v: %v (%v) and %v field (%v) is the same", i, lname, ConfigKeyGeomField, geomfld, ConfigKeyGeomIDField, idfld)
+		}
+
+		geomType := ""
+		geomType, err = layer.String(ConfigKeyGeomType, &geomType)
+		if err != nil {
+			return nil, fmt.Errorf("for layer (%v) %v : %v", i, lname, err)
 		}
 
 		var tblName string
 		tblName, err = layer.String(ConfigKeyTablename, &lname)
 		if err != nil {
-			return nil, fmt.Errorf("for %v layer(%v) %v has an error: %v", i, lname, ConfigKeyTablename, err)
+			return nil, fmt.Errorf("for %v layer (%v) %v has an error: %v", i, lname, ConfigKeyTablename, err)
 		}
 
 		var sql string
 		sql, err = layer.String(ConfigKeySQL, &sql)
 		if err != nil {
-			return nil, fmt.Errorf("for %v layer(%v) %v has an error: %v", i, lname, ConfigKeySQL, err)
+			return nil, fmt.Errorf("for %v layer (%v) %v has an error: %v", i, lname, ConfigKeySQL, err)
 		}
 
 		if tblName != lname && sql != "" {
-			log.Printf("Both %v and %v field are specified for layer(%v) %v, using only %[2]v field.", ConfigKeyTablename, ConfigKeySQL, i, lname)
+			log.Printf("both %v and %v field are specified for layer (%v) %v, using only %[2]v field.", ConfigKeyTablename, ConfigKeySQL, i, lname)
 		}
 
 		var lsrid = srid
@@ -216,7 +272,16 @@ func NewTileProvider(config dict.Dicter) (provider.Tiler, error) {
 			srid:      uint64(lsrid),
 		}
 
+		if sql != "" && !isSelectQuery.MatchString(sql) {
+			// if it is not a SELECT query, then we assume we have a sub-query
+			// (`(select ...) as foo`) which we can handle like a tablename
+			tblName = sql
+			sql = ""
+		}
+
 		if sql != "" {
+			// convert !BOX! (MapServer) and !bbox! (Mapnik) to !BBOX! for compatibility
+			sql := strings.Replace(strings.Replace(sql, "!BOX!", "!BBOX!", -1), "!bbox!", "!BBOX!", -1)
 			// make sure that the sql has a !BBOX! token
 			if !strings.Contains(sql, bboxToken) {
 				return nil, fmt.Errorf("SQL for layer (%v) %v is missing required token: %v", i, lname, bboxToken)
@@ -229,35 +294,127 @@ func NewTileProvider(config dict.Dicter) (provider.Tiler, error) {
 					return nil, fmt.Errorf("SQL for layer (%v) %v does not contain the id field for the geometry: %v", i, lname, idfld)
 				}
 			}
+
 			l.sql = sql
 		} else {
-			// Tablename and Fields will be used to
+			// Tablename and Fields will be used to build the query.
 			// We need to do some work. We need to check to see Fields contains the geom and gid fields
-			// and if not add them to the list. If Fields list is empty/nil we will use '*' for the field
-			// list.
+			// and if not add them to the list. If Fields list is empty/nil we will use '*' for the field list.
 			l.sql, err = genSQL(&l, p.pool, tblName, fields)
 			if err != nil {
-				return nil, fmt.Errorf("Could not generate sql, for layer(%v): %v", lname, err)
+				return nil, fmt.Errorf("could not generate sql, for layer(%v): %v", lname, err)
 			}
 		}
-		if strings.Contains(os.Getenv("SQL_DEBUG"), "LAYER_SQL") {
+
+		if strings.Contains(os.Getenv("TEGOLA_SQL_DEBUG"), "LAYER_SQL") {
 			log.Printf("SQL for Layer(%v):\n%v\n", lname, l.sql)
 		}
 
 		// set the layer geom type
-		if err = p.layerGeomType(&l); err != nil {
-			return nil, fmt.Errorf("error fetching geometry type for layer (%v): %v", l.name, err)
+		if geomType != "" {
+			if err = p.setLayerGeomType(&l, geomType); err != nil {
+				return nil, fmt.Errorf("error fetching geometry type for layer (%v): %v", l.name, err)
+			}
+		} else {
+			if err = p.inspectLayerGeomType(&l); err != nil {
+				return nil, fmt.Errorf("error fetching geometry type for layer (%v): %v", l.name, err)
+			}
 		}
 
 		lyrs[lname] = l
 	}
 	p.layers = lyrs
 
+	// track the provider so we can clean it up later
+	providers = append(providers, p)
+
 	return p, nil
 }
 
-// layerGeomType sets the geomType field on the layer by running the SQL and reading the geom type in the result set
-func (p Provider) layerGeomType(l *Layer) error {
+// derived from github.com/jackc/pgx configTLS (https://github.com/jackc/pgx/blob/master/conn.go)
+func ConfigTLS(sslMode string, sslKey string, sslCert string, sslRootCert string, cc *pgx.ConnConfig) error {
+
+	switch sslMode {
+	case "disable":
+		cc.UseFallbackTLS = false
+		cc.TLSConfig = nil
+		cc.FallbackTLSConfig = nil
+		return nil
+	case "allow":
+		cc.UseFallbackTLS = true
+		cc.FallbackTLSConfig = &tls.Config{InsecureSkipVerify: true}
+	case "prefer":
+		cc.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+		cc.UseFallbackTLS = true
+		cc.FallbackTLSConfig = nil
+	case "require":
+		cc.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	case "verify-ca", "verify-full":
+		cc.TLSConfig = &tls.Config{
+			ServerName: cc.Host,
+		}
+	default:
+		return ErrInvalidSSLMode(sslMode)
+	}
+
+	if sslRootCert != "" {
+		caCertPool := x509.NewCertPool()
+
+		caCert, err := ioutil.ReadFile(sslRootCert)
+		if err != nil {
+			return fmt.Errorf("unable to read CA file (%q): %v", sslRootCert, err)
+		}
+
+		if !caCertPool.AppendCertsFromPEM(caCert) {
+			return fmt.Errorf("unable to add CA to cert pool")
+		}
+
+		cc.TLSConfig.RootCAs = caCertPool
+		cc.TLSConfig.ClientCAs = caCertPool
+	}
+
+	if (sslCert == "") != (sslKey == "") {
+		return fmt.Errorf("both 'sslcert' and 'sslkey' are required")
+	} else if sslCert != "" { // we must have both now
+		cert, err := tls.LoadX509KeyPair(sslCert, sslKey)
+		if err != nil {
+			return fmt.Errorf("unable to read cert: %v", err)
+		}
+
+		cc.TLSConfig.Certificates = []tls.Certificate{cert}
+	}
+
+	return nil
+}
+
+// setLayerGeomType sets the geomType field on the layer to one of point,
+// linestring, polygon, multipoint, multilinestring, multipolygon or
+// geometrycollection
+func (p Provider) setLayerGeomType(l *Layer, geomType string) error {
+	switch strings.ToLower(geomType) {
+	case "point":
+		l.geomType = geom.Point{}
+	case "linestring":
+		l.geomType = geom.LineString{}
+	case "polygon":
+		l.geomType = geom.Polygon{}
+	case "multipoint":
+		l.geomType = geom.MultiPoint{}
+	case "multilinestring":
+		l.geomType = geom.MultiLineString{}
+	case "multipolygon":
+		l.geomType = geom.MultiPolygon{}
+	case "geometrycollection":
+		l.geomType = geom.Collection{}
+	default:
+		return fmt.Errorf("unsupported geometry_type (%v) for layer (%v)", geomType, l.name)
+	}
+	return nil
+}
+
+// inspectLayerGeomType sets the geomType field on the layer by running the SQL
+// and reading the geom type in the result set
+func (p Provider) inspectLayerGeomType(l *Layer) error {
 	var err error
 
 	// we want to know the geom type instead of returning the geom data so we modify the SQL
@@ -326,7 +483,7 @@ func (p Provider) layerGeomType(l *Layer) error {
 		}
 	}
 
-	return nil
+	return rows.Err()
 }
 
 // Layer fetches an individual layer from the provider, if it's configured
@@ -364,8 +521,8 @@ func (p Provider) TileFeatures(ctx context.Context, layer string, tile provider.
 		return fmt.Errorf("error replacing layer tokens for layer (%v) SQL (%v): %v", layer, sql, err)
 	}
 
-	if strings.Contains(os.Getenv("SQL_DEBUG"), "EXECUTE_SQL") {
-		log.Printf("SQL_DEBUG:EXECUTE_SQL for layer (%v): %v", layer, sql)
+	if strings.Contains(os.Getenv("TEGOLA_SQL_DEBUG"), "EXECUTE_SQL") {
+		log.Printf("TEGOLA_SQL_DEBUG:EXECUTE_SQL for layer (%v): %v", layer, sql)
 	}
 
 	// context check
@@ -400,14 +557,24 @@ func (p Provider) TileFeatures(ctx context.Context, layer string, tile provider.
 			case context.Canceled:
 				return err
 			default:
-				return fmt.Errorf("For layer (%v) %v", plyr.Name(), err)
+				return fmt.Errorf("for layer (%v) %v", plyr.Name(), err)
 			}
+		}
+
+		// check that we have geometry data. if not, skip the feature
+		if len(geobytes) == 0 {
+			continue
 		}
 
 		// decode our WKB
 		geom, err := wkb.DecodeBytes(geobytes)
 		if err != nil {
-			return fmt.Errorf("unable to decode layer (%v) geometry field (%v) into wkb where (%v = %v): %v", layer, plyr.GeomFieldName(), plyr.IDFieldName(), gid, err)
+			switch err.(type) {
+			case wkb.ErrUnknownGeometryType:
+				continue
+			default:
+				return fmt.Errorf("unable to decode layer (%v) geometry field (%v) into wkb where (%v = %v): %v", layer, plyr.GeomFieldName(), plyr.IDFieldName(), gid, err)
+			}
 		}
 
 		feature := provider.Feature{
@@ -423,5 +590,24 @@ func (p Provider) TileFeatures(ctx context.Context, layer string, tile provider.
 		}
 	}
 
-	return nil
+	return rows.Err()
+}
+
+// Close will close the Provider's database connectio
+func (p *Provider) Close() { p.pool.Close() }
+
+// reference to all instantiated providers
+var providers []Provider
+
+// Cleanup will close all database connections and destroy all previously instantiated Provider instances
+func Cleanup() {
+	if len(providers) > 0 {
+		log.Printf("cleaning up postgis providers")
+	}
+
+	for i := range providers {
+		providers[i].Close()
+	}
+
+	providers = make([]Provider, 0)
 }

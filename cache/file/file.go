@@ -38,12 +38,10 @@ func New(config dict.Dicter) (cache.Interface, error) {
 	fc := Cache{}
 
 	defaultMaxZoom := uint(tegola.MaxZ)
-	maxZoom, err := config.Uint(ConfigKeyMaxZoom, &defaultMaxZoom)
+	fc.MaxZoom, err = config.Uint(ConfigKeyMaxZoom, &defaultMaxZoom)
 	if err != nil {
 		return nil, err
 	}
-
-	fc.MaxZoom = maxZoom
 
 	fc.Basepath, err = config.String(ConfigKeyBasepath, nil)
 	if err != nil {
@@ -118,11 +116,17 @@ func (fc *Cache) Set(key *cache.Key, val []byte) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
 
 	// copy the contents
 	_, err = f.Write(val)
 	if err != nil {
+		// close the file, can't use 'defer f.Close()'' otherwise rename wont happen
+		f.Close()
+		return err
+	}
+
+	// close the file, can't use 'defer f.Close()'' otherwise rename wont happen
+	if err = f.Close(); err != nil {
 		return err
 	}
 
