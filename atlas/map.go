@@ -11,15 +11,15 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
+	"github.com/dennisrutjes/tegola/basic"
+	"github.com/dennisrutjes/tegola/dict"
+	"github.com/dennisrutjes/tegola/internal/convert"
+	"github.com/dennisrutjes/tegola/mvt"
+	"github.com/dennisrutjes/tegola/provider"
+	"github.com/dennisrutjes/tegola/provider/debug"
 	"github.com/go-spatial/geom"
 	"github.com/go-spatial/geom/slippy"
 	"github.com/go-spatial/tegola"
-	"github.com/go-spatial/tegola/basic"
-	"github.com/go-spatial/tegola/dict"
-	"github.com/go-spatial/tegola/internal/convert"
-	"github.com/go-spatial/tegola/mvt"
-	"github.com/go-spatial/tegola/provider"
-	"github.com/go-spatial/tegola/provider/debug"
 )
 
 // NewMap creates a new map with the necessary default values

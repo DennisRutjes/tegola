@@ -3,13 +3,13 @@ package validate
 import (
 	"context"
 
+	"github.com/dennisrutjes/tegola/basic"
+	"github.com/dennisrutjes/tegola/maths"
+	"github.com/dennisrutjes/tegola/maths/clip"
+	"github.com/dennisrutjes/tegola/maths/hitmap"
+	"github.com/dennisrutjes/tegola/maths/makevalid"
 	"github.com/go-spatial/geom"
 	"github.com/go-spatial/tegola"
-	"github.com/go-spatial/tegola/basic"
-	"github.com/go-spatial/tegola/maths"
-	"github.com/go-spatial/tegola/maths/clip"
-	"github.com/go-spatial/tegola/maths/hitmap"
-	"github.com/go-spatial/tegola/maths/makevalid"
 )
 
 func CleanLinestring(g []float64) (l []float64, err error) {

@@ -40,7 +40,7 @@ RUN mkdir -p /go/src/github.com/go-spatial/tegola
 COPY . /go/src/github.com/go-spatial/tegola
 
 # Build binary
-RUN cd /go/src/github.com/go-spatial/tegola/cmd/tegola \
+RUN cd /go/src/github.com/dennisrutjes/tegola/cmd/tegola \
 	&& go build -v {{.flags}} -gcflags "-N -l" -o /opt/tegola \ 
 	&& chmod a+x /opt/tegola
 

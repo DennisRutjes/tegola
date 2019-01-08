@@ -6,11 +6,11 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/dennisrutjes/tegola/atlas"
+	"github.com/dennisrutjes/tegola/cache"
+	"github.com/dennisrutjes/tegola/internal/log"
 	"github.com/go-spatial/geom/slippy"
 	"github.com/go-spatial/tegola"
-	"github.com/go-spatial/tegola/atlas"
-	"github.com/go-spatial/tegola/cache"
-	"github.com/go-spatial/tegola/internal/log"
 )
 
 type seedPurgeWorkerTileError struct {

@@ -3,9 +3,9 @@ package maths
 import (
 	"testing"
 
+	"github.com/dennisrutjes/tegola/basic"
 	"github.com/gdey/tbltest"
 	"github.com/go-spatial/tegola"
-	"github.com/go-spatial/tegola/basic"
 )
 
 func TestCleanPolygon(t *testing.T) {

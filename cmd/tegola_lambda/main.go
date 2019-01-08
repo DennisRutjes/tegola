@@ -7,12 +7,12 @@ import (
 	"os"
 
 	"github.com/arolek/algnhsa"
-	"github.com/go-spatial/tegola/atlas"
-	"github.com/go-spatial/tegola/cmd/internal/register"
-	"github.com/go-spatial/tegola/config"
-	"github.com/go-spatial/tegola/dict"
-	"github.com/go-spatial/tegola/mvt"
-	"github.com/go-spatial/tegola/server"
+	"github.com/dennisrutjes/tegola/atlas"
+	"github.com/dennisrutjes/tegola/cmd/internal/register"
+	"github.com/dennisrutjes/tegola/config"
+	"github.com/dennisrutjes/tegola/dict"
+	"github.com/dennisrutjes/tegola/mvt"
+	"github.com/dennisrutjes/tegola/server"
 )
 
 // set at build time via the CI

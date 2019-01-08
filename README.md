@@ -4,7 +4,7 @@
 [![Report Card](https://goreportcard.com/badge/github.com/go-spatial/tegola)](https://goreportcard.com/badge/github.com/go-spatial/tegola)
 [![Coverage Status](https://coveralls.io/repos/github/go-spatial/tegola/badge.svg?branch=master)](https://coveralls.io/github/go-spatial/tegola?branch=master)
 [![Godoc](http://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/go-spatial/tegola)
-[![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://github.com/go-spatial/tegola/blob/master/LICENSE.md)
+[![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://github.com/dennisrutjes/tegola/blob/master/LICENSE.md)
 
 Tegola is a vector tile server delivering [Mapbox Vector Tiles](https://github.com/mapbox/vector-tile-spec) with support for PostGIS and GeoPackage data providers.
 
@@ -41,7 +41,7 @@ Use "tegola [command] --help" for more information about a command.
 ```
 
 ## Running tegola as a vector tile server
-1. Download the appropriate binary of tegola for your platform via the [release page](https://github.com/go-spatial/tegola/releases).
+1. Download the appropriate binary of tegola for your platform via the [release page](https://github.com/dennisrutjes/tegola/releases).
 2. Setup your config file and run. Dy default tegola looks for a `config.toml` in the same directory as the binary. You can set a different location for the `config.toml` using a command flag:
 
 ```

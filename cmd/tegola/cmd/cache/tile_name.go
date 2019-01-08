@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"strings"
 
+	gdcmd "github.com/dennisrutjes/tegola/internal/cmd"
+	"github.com/dennisrutjes/tegola/internal/log"
+	"github.com/dennisrutjes/tegola/provider"
 	"github.com/go-spatial/cobra"
 	"github.com/go-spatial/geom/slippy"
-	gdcmd "github.com/go-spatial/tegola/internal/cmd"
-	"github.com/go-spatial/tegola/internal/log"
-	"github.com/go-spatial/tegola/provider"
 )
 
 var tileNameTile *slippy.Tile

@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/dennisrutjes/tegola/basic"
+	"github.com/dennisrutjes/tegola/mvt/vector_tile"
 	"github.com/go-spatial/tegola"
-	"github.com/go-spatial/tegola/basic"
-	"github.com/go-spatial/tegola/mvt/vector_tile"
 )
 
 func TestScaleLinestring(t *testing.T) {

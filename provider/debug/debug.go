@@ -7,10 +7,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/dennisrutjes/tegola/dict"
+	"github.com/dennisrutjes/tegola/provider"
 	"github.com/go-spatial/geom"
 	"github.com/go-spatial/tegola"
-	"github.com/go-spatial/tegola/dict"
-	"github.com/go-spatial/tegola/provider"
 )
 
 const Name = "debug"

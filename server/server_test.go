@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"github.com/dennisrutjes/tegola/atlas"
+	"github.com/dennisrutjes/tegola/provider/test"
+	"github.com/dennisrutjes/tegola/server"
 	"github.com/dimfeld/httptreemux"
 	"github.com/go-spatial/geom"
-	"github.com/go-spatial/tegola/atlas"
-	"github.com/go-spatial/tegola/provider/test"
-	"github.com/go-spatial/tegola/server"
 )
 
 // test server config

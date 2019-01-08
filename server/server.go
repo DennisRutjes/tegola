@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/dennisrutjes/tegola/atlas"
+	"github.com/dennisrutjes/tegola/internal/log"
 	"github.com/dimfeld/httptreemux"
 	"github.com/go-spatial/tegola"
-	"github.com/go-spatial/tegola/atlas"
-	"github.com/go-spatial/tegola/internal/log"
 )
 
 const (

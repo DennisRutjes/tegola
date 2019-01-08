@@ -6,11 +6,11 @@ import (
 
 	"context"
 
+	"github.com/dennisrutjes/tegola/dict"
+	"github.com/dennisrutjes/tegola/provider"
+	"github.com/dennisrutjes/tegola/provider/postgis"
 	"github.com/go-spatial/geom/slippy"
 	"github.com/go-spatial/tegola"
-	"github.com/go-spatial/tegola/dict"
-	"github.com/go-spatial/tegola/provider"
-	"github.com/go-spatial/tegola/provider/postgis"
 	"github.com/jackc/pgx"
 )
 

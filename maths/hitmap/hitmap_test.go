@@ -5,9 +5,9 @@ import (
 	"log"
 	"testing"
 
+	"github.com/dennisrutjes/tegola/basic"
+	"github.com/dennisrutjes/tegola/maths"
 	"github.com/gdey/tbltest"
-	"github.com/go-spatial/tegola/basic"
-	"github.com/go-spatial/tegola/maths"
 )
 
 func TestSegmentLinesContains(t *testing.T) {

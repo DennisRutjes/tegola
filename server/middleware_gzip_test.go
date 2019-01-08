@@ -5,8 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/go-spatial/tegola/cache/memory"
-	"github.com/go-spatial/tegola/server"
+	"github.com/dennisrutjes/tegola/cache/memory"
+	"github.com/dennisrutjes/tegola/server"
 )
 
 func TestMiddlewareGzipHandler(t *testing.T) {

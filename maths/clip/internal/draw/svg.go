@@ -5,9 +5,9 @@ import (
 	"io"
 
 	"github.com/ajstarks/svgo"
+	"github.com/dennisrutjes/tegola/maths"
+	"github.com/dennisrutjes/tegola/maths/clip/region"
 	"github.com/go-spatial/tegola"
-	"github.com/go-spatial/tegola/maths"
-	"github.com/go-spatial/tegola/maths/clip/region"
 )
 
 type SVG struct {

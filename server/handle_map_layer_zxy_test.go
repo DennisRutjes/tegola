@@ -9,8 +9,8 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	"github.com/go-spatial/tegola/atlas"
-	"github.com/go-spatial/tegola/mvt/vector_tile"
+	"github.com/dennisrutjes/tegola/atlas"
+	"github.com/dennisrutjes/tegola/mvt/vector_tile"
 )
 
 type MapHandlerTCase struct {

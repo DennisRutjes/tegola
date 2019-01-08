@@ -3,8 +3,8 @@ package makevalid
 import (
 	"sort"
 
-	"github.com/go-spatial/tegola/maths"
-	"github.com/go-spatial/tegola/maths/points"
+	"github.com/dennisrutjes/tegola/maths"
+	"github.com/dennisrutjes/tegola/maths/points"
 )
 
 type colPtMap struct {

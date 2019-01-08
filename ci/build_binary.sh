@@ -14,7 +14,7 @@ if [ -z "$VERSION_TAG" ]; then
 	VERSION_TAG=$(git rev-parse --short HEAD)
 fi
 
-LDFLAGS="-w -X github.com/go-spatial/tegola/cmd/tegola/cmd.Version=${VERSION_TAG}"
+LDFLAGS="-w -X github.com/dennisrutjes/tegola/cmd/tegola/cmd.Version=${VERSION_TAG}"
 if [[ "$CGO_ENABLED" == "0" ]]; then
 	echo "Building binaries without CGO."
 	LDFLAGS="${LDFLAGS} -s"
@@ -51,10 +51,10 @@ build_bins(){
 			# use xgo for CGO builds and the normal Go toolchain for non CGO builds
 			if [[ "$CGO_ENABLED" != "0" ]]; then
 				echo "CGO_ENABLED: $CGO_ENABLED"
-				xgo -go 1.10.x --targets="${GOOS}/${GOARCH}" -ldflags "${LDFLAGS}" -dest "${TRAVIS_BUILD_DIR}/releases" github.com/go-spatial/tegola/cmd/tegola
+				xgo -go 1.10.x --targets="${GOOS}/${GOARCH}" -ldflags "${LDFLAGS}" -dest "${TRAVIS_BUILD_DIR}/releases" github.com/dennisrutjes/tegola/cmd/tegola
 				mv ${TRAVIS_BUILD_DIR}/releases/tegola-${GOOS}* "${TRAVIS_BUILD_DIR}/releases/tegola${EXT}"
 			else
-				GOOS=${GOOS} GOARCH=${GOARCH} go build -ldflags "${LDFLAGS}" -o "${TRAVIS_BUILD_DIR}/releases/tegola${EXT}" github.com/go-spatial/tegola/cmd/tegola
+				GOOS=${GOOS} GOARCH=${GOARCH} go build -ldflags "${LDFLAGS}" -o "${TRAVIS_BUILD_DIR}/releases/tegola${EXT}" github.com/dennisrutjes/tegola/cmd/tegola
 				chmod a+x "${TRAVIS_BUILD_DIR}/releases/tegola${EXT}"
 			fi
 
@@ -72,7 +72,7 @@ build_bins(){
 # AWS lambda has a special shim and needs to be built for linux
 build_lambda() {	
 	local filename="${TRAVIS_BUILD_DIR}/releases/tegola_${GOOS}_${GOARCH}"
-	GOOS="linux" GOARCH="amd64" go build -ldflags "${LDFLAGS}" -o "${TRAVIS_BUILD_DIR}/releases/tegola_lambda" github.com/go-spatial/tegola/cmd/tegola_lambda
+	GOOS="linux" GOARCH="amd64" go build -ldflags "${LDFLAGS}" -o "${TRAVIS_BUILD_DIR}/releases/tegola_lambda" github.com/dennisrutjes/tegola/cmd/tegola_lambda
 
 	cd $(dirname $filename)
 	zip -9 -D tegola_lambda.zip tegola_lambda

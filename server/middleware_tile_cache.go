@@ -6,10 +6,10 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/go-spatial/tegola/atlas"
-	"github.com/go-spatial/tegola/cache"
-	"github.com/go-spatial/tegola/internal/log"
-	"github.com/go-spatial/tegola/mvt"
+	"github.com/dennisrutjes/tegola/atlas"
+	"github.com/dennisrutjes/tegola/cache"
+	"github.com/dennisrutjes/tegola/internal/log"
+	"github.com/dennisrutjes/tegola/mvt"
 )
 
 // TileCacheHandler implements a request cache for tiles on requests when the URLs

@@ -3,13 +3,13 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/dennisrutjes/tegola/atlas"
+	"github.com/dennisrutjes/tegola/cmd/internal/register"
+	cachecmd "github.com/dennisrutjes/tegola/cmd/tegola/cmd/cache"
+	"github.com/dennisrutjes/tegola/config"
+	"github.com/dennisrutjes/tegola/dict"
+	"github.com/dennisrutjes/tegola/internal/log"
 	"github.com/go-spatial/cobra"
-	"github.com/go-spatial/tegola/atlas"
-	"github.com/go-spatial/tegola/cmd/internal/register"
-	cachecmd "github.com/go-spatial/tegola/cmd/tegola/cmd/cache"
-	"github.com/go-spatial/tegola/config"
-	"github.com/go-spatial/tegola/dict"
-	"github.com/go-spatial/tegola/internal/log"
 )
 
 var (

@@ -6,15 +6,15 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/dennisrutjes/tegola/atlas"
+	"github.com/dennisrutjes/tegola/internal/log"
+	"github.com/dennisrutjes/tegola/maths"
+	"github.com/dennisrutjes/tegola/provider"
 	"github.com/go-spatial/cobra"
 	"github.com/go-spatial/geom/slippy"
 	"github.com/go-spatial/tegola"
-	"github.com/go-spatial/tegola/atlas"
-	"github.com/go-spatial/tegola/internal/log"
-	"github.com/go-spatial/tegola/maths"
-	"github.com/go-spatial/tegola/provider"
 
-	gdcmd "github.com/go-spatial/tegola/internal/cmd"
+	gdcmd "github.com/dennisrutjes/tegola/internal/cmd"
 )
 
 const defaultUsage = `Usage:{{if .Runnable}}
@@ -216,7 +216,7 @@ func generateTilesForBounds(ctx context.Context, bounds [4]float64, zooms []uint
 			maxXYatZ := uint(maths.Exp2(uint64(z))) - 1
 
 			// ensure the initials are smaller than finals
-			// this breaks at the anti meridian: https://github.com/go-spatial/tegola/issues/500
+			// this breaks at the anti meridian: https://github.com/dennisrutjes/tegola/issues/500
 			if xi > xf {
 				xi, xf = xf, xi
 			}

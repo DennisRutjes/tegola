@@ -5,11 +5,11 @@ import (
 	"html"
 	"strings"
 
+	"github.com/dennisrutjes/tegola/atlas"
+	"github.com/dennisrutjes/tegola/config"
+	"github.com/dennisrutjes/tegola/provider"
 	"github.com/go-spatial/geom"
 	"github.com/go-spatial/tegola"
-	"github.com/go-spatial/tegola/atlas"
-	"github.com/go-spatial/tegola/config"
-	"github.com/go-spatial/tegola/provider"
 )
 
 type ErrProviderLayerInvalid struct {

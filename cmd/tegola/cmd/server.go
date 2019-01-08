@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"time"
 
+	gdcmd "github.com/dennisrutjes/tegola/internal/cmd"
+	"github.com/dennisrutjes/tegola/provider"
+	"github.com/dennisrutjes/tegola/server"
 	"github.com/go-spatial/cobra"
-	gdcmd "github.com/go-spatial/tegola/internal/cmd"
-	"github.com/go-spatial/tegola/provider"
-	"github.com/go-spatial/tegola/server"
 )
 
 var (

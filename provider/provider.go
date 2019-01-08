@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/dennisrutjes/tegola/dict"
+	"github.com/dennisrutjes/tegola/internal/log"
 	"github.com/go-spatial/geom"
-	"github.com/go-spatial/tegola/dict"
-	"github.com/go-spatial/tegola/internal/log"
 )
 
 type Tile interface {

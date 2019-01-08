@@ -5,10 +5,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/dennisrutjes/tegola/provider"
 	"github.com/go-spatial/cobra"
-	"github.com/go-spatial/tegola/provider"
 
-	_ "github.com/go-spatial/tegola/provider/postgis"
+	_ "github.com/dennisrutjes/tegola/provider/postgis"
 )
 
 var Root = &cobra.Command{

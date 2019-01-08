@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/go-spatial/tegola/cache"
-	"github.com/go-spatial/tegola/cache/s3"
-	"github.com/go-spatial/tegola/dict"
+	"github.com/dennisrutjes/tegola/cache"
+	"github.com/dennisrutjes/tegola/cache/s3"
+	"github.com/dennisrutjes/tegola/dict"
 )
 
 // gzip encoded test data

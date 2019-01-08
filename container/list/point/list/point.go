@@ -5,8 +5,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/go-spatial/tegola/container/list"
-	"github.com/go-spatial/tegola/maths"
+	"github.com/dennisrutjes/tegola/container/list"
+	"github.com/dennisrutjes/tegola/maths"
 )
 
 type Elementer interface {

@@ -6,16 +6,16 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/dennisrutjes/tegola/basic"
+	"github.com/dennisrutjes/tegola/internal/convert"
+	"github.com/dennisrutjes/tegola/internal/log"
+	"github.com/dennisrutjes/tegola/maths"
+	"github.com/dennisrutjes/tegola/maths/points"
+	"github.com/dennisrutjes/tegola/maths/validate"
+	"github.com/dennisrutjes/tegola/mvt/vector_tile"
 	"github.com/go-spatial/geom"
 	"github.com/go-spatial/geom/encoding/wkt"
 	"github.com/go-spatial/tegola"
-	"github.com/go-spatial/tegola/basic"
-	"github.com/go-spatial/tegola/internal/convert"
-	"github.com/go-spatial/tegola/internal/log"
-	"github.com/go-spatial/tegola/maths"
-	"github.com/go-spatial/tegola/maths/points"
-	"github.com/go-spatial/tegola/maths/validate"
-	"github.com/go-spatial/tegola/mvt/vector_tile"
 )
 
 // errors

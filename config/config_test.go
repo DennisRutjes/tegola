@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/go-spatial/tegola/config"
-	"github.com/go-spatial/tegola/internal/env"
+	"github.com/dennisrutjes/tegola/config"
+	"github.com/dennisrutjes/tegola/internal/env"
 )
 
 const (

@@ -3,7 +3,7 @@ package postgis
 import (
 	"fmt"
 
-	"github.com/go-spatial/tegola/dict"
+	"github.com/dennisrutjes/tegola/dict"
 	"github.com/jackc/pgx"
 )
 

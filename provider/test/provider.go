@@ -3,11 +3,11 @@ package test
 import (
 	"context"
 
+	"github.com/dennisrutjes/tegola/provider"
 	"github.com/go-spatial/geom"
 	"github.com/go-spatial/tegola"
-	"github.com/go-spatial/tegola/provider"
 
-	"github.com/go-spatial/tegola/dict"
+	"github.com/dennisrutjes/tegola/dict"
 )
 
 const Name = "test"

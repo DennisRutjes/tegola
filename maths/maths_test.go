@@ -3,8 +3,8 @@ package maths_test
 import (
 	"testing"
 
+	"github.com/dennisrutjes/tegola/maths"
 	"github.com/gdey/tbltest"
-	"github.com/go-spatial/tegola/maths"
 )
 
 func Test_Contains(t *testing.T) {

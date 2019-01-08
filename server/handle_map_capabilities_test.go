@@ -9,9 +9,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/go-spatial/tegola/atlas"
-	"github.com/go-spatial/tegola/mapbox/tilejson"
-	"github.com/go-spatial/tegola/server"
+	"github.com/dennisrutjes/tegola/atlas"
+	"github.com/dennisrutjes/tegola/mapbox/tilejson"
+	"github.com/dennisrutjes/tegola/server"
 )
 
 func TestHandleMapCapabilities(t *testing.T) {

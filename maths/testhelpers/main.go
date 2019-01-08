@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/go-spatial/tegola/maths"
+	"github.com/dennisrutjes/tegola/maths"
 )
 
 var validXY *regexp.Regexp

@@ -3,9 +3,9 @@ package maths_test
 import (
 	"testing"
 
+	"github.com/dennisrutjes/tegola/basic"
+	"github.com/dennisrutjes/tegola/maths"
 	"github.com/gdey/tbltest"
-	"github.com/go-spatial/tegola/basic"
-	"github.com/go-spatial/tegola/maths"
 )
 
 func invertPoints(pts []float64) (rpts []float64) {

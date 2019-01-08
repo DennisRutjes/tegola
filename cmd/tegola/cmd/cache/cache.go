@@ -9,11 +9,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dennisrutjes/tegola/atlas"
+	"github.com/dennisrutjes/tegola/config"
+	"github.com/dennisrutjes/tegola/internal/log"
 	"github.com/go-spatial/cobra" // The config from the main app
 	"github.com/go-spatial/geom/slippy"
-	"github.com/go-spatial/tegola/atlas"
-	"github.com/go-spatial/tegola/config"
-	"github.com/go-spatial/tegola/internal/log"
 )
 
 // the config from the main app

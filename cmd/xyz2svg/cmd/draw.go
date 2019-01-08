@@ -9,18 +9,18 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/dennisrutjes/tegola/cmd/internal/register"
+	"github.com/dennisrutjes/tegola/config"
+	"github.com/dennisrutjes/tegola/dict"
+	"github.com/dennisrutjes/tegola/draw/svg"
+	"github.com/dennisrutjes/tegola/internal/convert"
+	"github.com/dennisrutjes/tegola/maths/validate"
+	"github.com/dennisrutjes/tegola/mvt"
+	"github.com/dennisrutjes/tegola/provider"
 	"github.com/go-spatial/cobra"
 	"github.com/go-spatial/geom"
 	"github.com/go-spatial/geom/slippy"
 	"github.com/go-spatial/tegola"
-	"github.com/go-spatial/tegola/cmd/internal/register"
-	"github.com/go-spatial/tegola/config"
-	"github.com/go-spatial/tegola/dict"
-	"github.com/go-spatial/tegola/draw/svg"
-	"github.com/go-spatial/tegola/internal/convert"
-	"github.com/go-spatial/tegola/maths/validate"
-	"github.com/go-spatial/tegola/mvt"
-	"github.com/go-spatial/tegola/provider"
 )
 
 var drawCmd = &cobra.Command{

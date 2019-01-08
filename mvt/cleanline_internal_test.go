@@ -3,8 +3,8 @@ package mvt
 import (
 	"testing"
 
+	"github.com/dennisrutjes/tegola/basic"
 	"github.com/go-spatial/tegola"
-	"github.com/go-spatial/tegola/basic"
 )
 
 func TestCleanline(t *testing.T) {
